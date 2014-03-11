@@ -1,5 +1,8 @@
 Hadoop MapReduce Change Log
 
+    MAPREDUCE-5028. Fixed a bug in MapTask that was causing mappers to fail
+    when a large value of io.sort.mb is set. (Karthik Kambatla via vinodkv)
+
 Release 2.3.1 - UNRELEASED
 
   INCOMPATIBLE CHANGES
