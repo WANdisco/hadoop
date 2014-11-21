@@ -314,18 +314,14 @@ public class WebAppProxyServlet extends HttpServlet {
             req.getQueryString(), true), runningUser, id);
         return;
       }
-      URI toFetch = new URI(trackingUri.getScheme(), 
-          trackingUri.getAuthority(),
-          StringHelper.ujoin(trackingUri.getPath(), rest), req.getQueryString(),
-          null);
-      
-      LOG.info(req.getRemoteUser()+" is accessing unchecked "+toFetch+
-          " which is the app master GUI of "+appId+" owned by "+runningUser);
 
+      URI toFetch;
       switch(applicationReport.getYarnApplicationState()) {
       case KILLED:
       case FINISHED:
       case FAILED:
+        toFetch = logAndGetFetchURI(req, appId, trackingUri, runningUser,
+            trackingUri.getPath());
         resp.sendRedirect(resp.encodeRedirectURL(toFetch.toString()));
         return;
       }
@@ -333,6 +329,8 @@ public class WebAppProxyServlet extends HttpServlet {
       if(userWasWarned && userApproved) {
         c = makeCheckCookie(id, true);
       }
+      String path = StringHelper.ujoin(trackingUri.getPath(), rest);
+      toFetch = logAndGetFetchURI(req, appId, trackingUri, runningUser, path);
       proxyLink(req, resp, toFetch, c, getProxyHost());
 
     } catch(URISyntaxException e) {
@@ -341,4 +339,15 @@ public class WebAppProxyServlet extends HttpServlet {
       throw new IOException(e);
     }
   }
+
+  private URI logAndGetFetchURI(HttpServletRequest req, String appId,
+                                URI trackingUri, String runningUser, String path)
+    throws URISyntaxException {
+    URI toFetch = new URI(req.getScheme(), trackingUri.getAuthority(), path,
+                          req.getQueryString(), null);
+    LOG.info(req.getRemoteUser() + " is accessing unchecked " + toFetch
+             + " which is the app master GUI of " + appId + " owned by "
+             + runningUser);
+    return toFetch;
+   }
 }
